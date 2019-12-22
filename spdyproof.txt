@@ -1,0 +1,10 @@
+user@host:~/QUICvsSPDY$ curl https://145.100.105.164/1mb.html --cacert /home/f13rce/cacert.pem -I
+HTTP/2 200
+server: nginx/1.17.6
+date: Wed, 18 Dec 2019 10:14:52 GMT
+content-type: text/html
+content-length: 1000018
+last-modified: Mon, 09 Dec 2019 14:21:11 GMT
+etag: "5dee5857-f4252"
+accept-ranges: bytes
+
