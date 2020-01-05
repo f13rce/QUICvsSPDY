@@ -12,8 +12,8 @@
 QUIC_IP="145.100.105.165"
 SPDY_IP="145.100.105.164"
 
-sampleSize=50
-fileSizes=(1mb 10mb 100mb)
+sampleSize=25
+fileSizes=(1mb)
 latencies=(0ms 50ms 250ms 500ms)
 jitters=(0ms 50ms 150ms 250ms 500ms)
 packetLosses=(0.0% 1.0% 5.0% 10.0% 15.0%)
@@ -48,14 +48,16 @@ do
 		Log "Setting QUIC latency environment..."
 ssh -oStrictHostKeyChecking=no root@$QUIC_IP << EOF
 	export DEBIAN_FRONTEND=noninteractive
-	tc qdisc change dev eth0 root netem delay $latency 0ms
+	tc qdisc del dev eth0 root netem delay $latency 0ms
+	tc qdisc add dev eth0 root netem delay $latency 0ms
 EOF
 
 		# Set SPDY environment
 		Log "Setting SPDY latency environment..."
 ssh -oStrictHostKeyChecking=no root@$SPDY_IP << EOF
 	export DEBIAN_FRONTEND=noninteractive
-	tc qdisc change dev eth0 root netem delay $latency 0ms
+	tc qdisc del dev eth0 root netem delay $latency 0ms
+	tc qdisc add dev eth0 root netem delay $latency 0ms
 EOF
 
 		# Test QUIC
@@ -89,6 +91,21 @@ EOF
 
 		# SPDY
 		#curl https://145.100.105.164/10mb.html --cacert cacert.pem --output /dev/null
+
+		# Reset QUIC environment
+		Log "Setting QUIC latency environment..."
+ssh -oStrictHostKeyChecking=no root@$QUIC_IP << EOF
+	export DEBIAN_FRONTEND=noninteractive
+	tc qdisc del dev eth0 root netem delay $latency 0ms
+EOF
+
+		# Reset SPDY environment
+		Log "Setting SPDY latency environment..."
+ssh -oStrictHostKeyChecking=no root@$SPDY_IP << EOF
+	export DEBIAN_FRONTEND=noninteractive
+	tc qdisc del dev eth0 root netem delay $latency 0ms
+EOF
+
 	done
 
 	# Test jitter
@@ -100,14 +117,14 @@ EOF
 		Log "Setting QUIC environment..."
 ssh -oStrictHostKeyChecking=no root@$QUIC_IP << EOF
 	export DEBIAN_FRONTEND=noninteractive
-	tc qdisc change dev eth0 root netem delay 0ms $jitter
+	tc qdisc add dev eth0 root netem delay 0ms $jitter
 EOF
 
 		# Set SPDY environment
 		Log "Setting SPDY environment..."
 ssh -oStrictHostKeyChecking=no root@$SPDY_IP << EOF
 	export DEBIAN_FRONTEND=noninteractive
-	tc qdisc change dev eth0 root netem delay 0ms $jitter
+	tc qdisc add dev eth0 root netem delay 0ms $jitter
 EOF
 
 		# Test QUIC
@@ -141,6 +158,23 @@ EOF
 
 		# SPDY
 		#curl https://145.100.105.164/10mb.html --cacert cacert.pem --output /dev/null
+
+		# Reset QUIC environment
+		Log "Setting QUIC environment..."
+ssh -oStrictHostKeyChecking=no root@$QUIC_IP << EOF
+	export DEBIAN_FRONTEND=noninteractive
+	tc qdisc del dev eth0 root netem delay 0ms $jitter
+EOF
+
+		# Reset SPDY environment
+		Log "Setting SPDY environment..."
+ssh -oStrictHostKeyChecking=no root@$SPDY_IP << EOF
+	export DEBIAN_FRONTEND=noninteractive
+	tc qdisc del dev eth0 root netem delay 0ms $jitter
+EOF
+
 	done
 
 done
+
+./collectpacketlosses.sh

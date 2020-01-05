@@ -12,8 +12,8 @@
 QUIC_IP="145.100.105.165"
 SPDY_IP="145.100.105.164"
 
-sampleSize=50
-fileSizes=(1mb 10mb 100mb)
+sampleSize=10
+fileSizes=(1mb)
 packetLosses=(0.1% 1.0% 5.0% 10.0% 15.0%)
 
 screenName="packet.capture"
@@ -46,16 +46,14 @@ do
 		Log "Setting QUIC loss environment..."
 ssh -oStrictHostKeyChecking=no root@$QUIC_IP << EOF
 	export DEBIAN_FRONTEND=noninteractive
-	tc qdisc change dev eth0 root netem delay 0ms 0ms
-	tc qdisc change dev eth0 root netem loss $loss
+	tc qdisc add dev eth0 root netem loss $loss
 EOF
 
 		# Set SPDY environment
 		Log "Setting SPDY loss environment..."
 ssh -oStrictHostKeyChecking=no root@$SPDY_IP << EOF
 	export DEBIAN_FRONTEND=noninteractive
-	tc qdisc change dev eth0 root netem delay 0ms 0ms
-	tc qdisc change dev eth0 root netem loss $loss
+	tc qdisc add dev eth0 root netem loss $loss
 EOF
 
 		# Test QUIC
@@ -89,5 +87,21 @@ EOF
 
 		# SPDY
 		#curl https://145.100.105.164/10mb.html --cacert cacert.pem --output /dev/null
+
+		# Reset QUIC environment
+		Log "Setting QUIC loss environment..."
+ssh -oStrictHostKeyChecking=no root@$QUIC_IP << EOF
+	export DEBIAN_FRONTEND=noninteractive
+	tc qdisc del dev eth0 root netem loss $loss
+EOF
+
+		# Reset SPDY environment
+		Log "Setting SPDY loss environment..."
+ssh -oStrictHostKeyChecking=no root@$SPDY_IP << EOF
+	export DEBIAN_FRONTEND=noninteractive
+	tc qdisc del dev eth0 root netem loss $loss
+EOF
+
+
 	done
 done
